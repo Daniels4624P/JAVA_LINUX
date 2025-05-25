@@ -31,11 +31,17 @@ This program organizes files in a specified directory by moving them into subdir
 
 1.  Ensure the input directory `/home/gerente-ti/salidas` exists and contains files you want to organize.
 2.  Open a terminal or command prompt.
-3.  Navigate to the project's root directory.
-4.  Run the application using the following command (replace the JAR filename if it's different):
+3.  **Navigate to the project's root directory.** This is the directory that contains the `pom.xml` file and the `target` folder.
+
+4.  **From the project's root directory**, run the application using the following command (replace the JAR filename if it's different):
     ```bash
     java -jar target/file-organizer-1.0-SNAPSHOT-jar-with-dependencies.jar
     ```
+    *Alternatively*, if you have already navigated into the `target` directory (e.g., by doing `cd target`), you can run the JAR directly like this:
+    ```bash
+    java -jar file-organizer-1.0-SNAPSHOT-jar-with-dependencies.jar
+    ```
+
 5.  The program will process the files and generate a `report.pdf` in `/home/gerente-ti/salidas`. A confirmation message will be printed to the console.
 
 ## Important Notes
