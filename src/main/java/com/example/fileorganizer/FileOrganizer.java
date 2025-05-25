@@ -9,7 +9,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
-// PDFBox Imports
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -43,12 +42,10 @@ public class FileOrganizer {
         }
 
         System.out.println("\n--- File Processing Complete ---");
-        // No longer printing log here, it will go to the PDF
         
         String reportOutputPath = Paths.get(TARGET_DIRECTORY, REPORT_FILE_NAME).toString();
         generatePdfReport(movedFilesLog, reportOutputPath);
 
-        // Placeholder for actual alert
         System.out.println("Alert: File organization process finished. Report generated at " + reportOutputPath);
     }
 
@@ -89,8 +86,9 @@ public class FileOrganizer {
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage();
             document.addPage(page);
+            PDPageContentStream contentStream = new PDPageContentStream(document, page);
 
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+            try {
                 contentStream.setFont(PDType1Font.HELVETICA_BOLD, 16);
                 contentStream.beginText();
                 contentStream.newLineAtOffset(50, 750);
@@ -99,33 +97,42 @@ public class FileOrganizer {
 
                 contentStream.setFont(PDType1Font.HELVETICA, 10);
                 float yPosition = 720;
-                float leading = 14.5f; // Line spacing
+                final float leading = 14.5f;
+                final float pageTopMargin = 750;
+                final float pageBottomMargin = 50;
+                final float leftMargin = 50;
+
+                // Start text block for the first page's content
+                contentStream.beginText();
+                contentStream.newLineAtOffset(leftMargin, yPosition);
 
                 for (String entry : logEntries) {
-                    if (yPosition < 50) { // Check if new page is needed
-                        contentStream.endText(); // End text on current page before closing stream
-                        contentStream.close();
+                    if (yPosition < pageBottomMargin) { 
+                        contentStream.endText(); // End text on current page
+                        contentStream.close();   // Close current stream
+
                         page = new PDPage();
                         document.addPage(page);
-                        contentStream = new PDPageContentStream(document, page); // new content stream for new page
+                        contentStream = new PDPageContentStream(document, page); // Create new stream for new page
+                        
                         contentStream.setFont(PDType1Font.HELVETICA, 10);
-                        yPosition = 750; // Reset Y position
-                        contentStream.beginText(); // Must begin text again for the new page
-                        contentStream.newLineAtOffset(50, yPosition);
-                    }
-                     if (!contentStream.isInTextMode()) { // Ensure we are in text mode
-                        contentStream.beginText();
-                        contentStream.newLineAtOffset(50, yPosition);
+                        yPosition = pageTopMargin;
+                        contentStream.beginText(); // Start new text block on new page
+                        contentStream.newLineAtOffset(leftMargin, yPosition);
                     }
                     contentStream.showText(entry);
                     contentStream.newLineAtOffset(0, -leading);
                     yPosition -= leading;
                 }
-                contentStream.endText();
+                contentStream.endText(); // End the last text block
+            } finally {
+                if (contentStream != null) {
+                    contentStream.close(); // Ensure the last content stream is closed
+                }
             }
             document.save(outputPath);
             System.out.println("PDF report generated successfully at " + outputPath);
-            movedFilesLog.add("PDF report generated successfully at " + outputPath); // Add to log as well
+            movedFilesLog.add("PDF report generated successfully at " + outputPath);
         } catch (IOException e) {
             System.err.println("Error generating PDF report: " + e.getMessage());
             movedFilesLog.add("Error generating PDF report: " + e.getMessage());
